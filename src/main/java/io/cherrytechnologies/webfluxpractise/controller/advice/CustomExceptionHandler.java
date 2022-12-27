@@ -8,15 +8,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.reactive.result.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
 @ControllerAdvice
-public class CustomExceptionHandler {
+public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = {BadInputException.class})
-    protected ResponseEntity<Object> handleConflict(
+    protected Mono<ResponseEntity<Object>> handleConflict(
             RuntimeException ex, ServerWebExchange serverWebExchange) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
+        return handleExceptionInternal(ex, ex.getMessage(), null, HttpStatus.BAD_REQUEST, serverWebExchange);
     }
 }

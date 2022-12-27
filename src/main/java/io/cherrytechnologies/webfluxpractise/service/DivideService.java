@@ -16,17 +16,23 @@ public class DivideService {
 
     private Logger logger = LoggerFactory.getLogger(DivideService.class);
 
-    public Mono<ResponseDto<Integer>> divide(Mono<DivideRequestDto> mono){
+    public Mono<ResponseDto<Integer>> divide(Mono<DivideRequestDto> mono) {
         return mono
                 .subscribeOn(Schedulers.boundedElastic())
                 .delayElement(Duration.ofMillis(100))
                 .doOnNext(m -> logger.debug("Entered the divide method"))
-                .doOnNext( m -> {
+//                .doOnNext( m -> {
+//                    if (m.getFirst() == 0 || m.getSecond() == 0)
+//                        throw new BadInputException("Please provide both value to be not 0");
+//                })
+                .handle((m, sink) -> {
                     if (m.getFirst() == 0 || m.getSecond() == 0)
-                        throw new BadInputException("Please provide both value to be not 0");
+                        sink.error(new BadInputException("Please provide both value to be not 0"));
+                    else sink.next(m);
                 })
+                .cast(DivideRequestDto.class)
                 .doOnError(BadInputException.class, e -> logger.error(e.getMessage()))
-                .map( m -> m.getFirst() / m.getSecond())
+                .map(m -> m.getFirst() / m.getSecond())
                 .map(ResponseDto::new);
     }
 }
